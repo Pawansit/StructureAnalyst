@@ -11,8 +11,9 @@ def BfactorPerChain(PDBID, Chain):
 
 
 def BfactorPerChainLinePlot(PDBID, Chain):
-    PDBID.df['ATOM'][PDBID.df['ATOM']['chain_id']== Chain]['b_factor'].plot(kind="line")
-    plt.title('B-Factors Along the Amino Acid Chain')
+    PDB_Chain = PDBID.df['ATOM'][(PDBID.df['ATOM']['chain_id']== Chain) & (PDBID.df['ATOM']['atom_name']== 'CA')].reset_index()
+    PDB_Chain['b_factor'].plot(kind="line")
+    plt.title('B-Factors Along the Amino Acid '+ Chain + ' Chain and CA atoms')
     plt.xlabel('Residue Number')
     plt.ylabel('B-factor in $A^2$')
     plt.savefig("3eiy_BfatorLine.png")
