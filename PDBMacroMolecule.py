@@ -1,5 +1,7 @@
 from biopandas.pdb import PandasPdb
 import matplotlib.pyplot as plt
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+
 
 
 def BfactorPerChain(PDBID, Chain):
@@ -20,9 +22,20 @@ def BfactorPerChainLinePlot(PDBID, Chain):
 
 
 
-ppdb = PandasPdb().read_pdb('../../ComPath-DataDownload/PDBAPI/Compath_db/PDB_downlaod_rsync/pdb/pdb7l1z.ent')
-BfactorPerChain(PDBID= ppdb, Chain="A")
-BfactorPerChainLinePlot(PDBID= ppdb, Chain="A")
+if __name__ == '__main__':
+    parser = ArgumentParser(description="", formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--input_pdb",   type=str, default="No", help="")
+    parser.add_argument("--Chain", type=str, default="No", help="")
+
+    commandline_args = vars(parser.parse_args())
+    BfactorPerChain(commandline_args['input_pdb'], commandline_args['Chain'] )
+    BfactorPerChainLinePlot(commandline_args['input_pdb'], commandline_args['Chain'] )
+
+
+
+#ppdb = PandasPdb().read_pdb('../../ComPath-DataDownload/PDBAPI/Compath_db/PDB_downlaod_rsync/pdb/pdb7l1z.ent')
+#BfactorPerChain(PDBID= ppdb, Chain="A")
+#BfactorPerChainLinePlot(PDBID= ppdb, Chain="A")
 
 
 
