@@ -1,0 +1,3 @@
+,pdbx_strand_id,entity_id,type_x,pdbx_gene_src_scientific_name,pdbx_gene_src_ncbi_taxonomy_id,pdbx_db_accession,type_y,pdbx_description,pdbx_number_of_molecules,pdbx_ec,pdbx_mutation,ChainLength
+0,A,['1'],['polypeptide(L)'],['Severe acute respiratory syndrome coronavirus 2'],['2697049'],['P0DTD1'],['polymer'],['3C-like proteinase'],['1'],['3.4.22.69'],['?'],306
+1,C,['2'],['polypeptide(L)'],['synthetic construct'],['32630'],['6LU7'],['polymer'],"['N-[(5-METHYLISOXAZOL-3-YL)CARBONYL]ALANYL-L-VALYL-N~1~-((1R,2Z)-4-(BENZYLOXY)-4-OXO-1-{[(3R)-2-OXOPYRROLIDIN-3-YL]METHYL}BUT-2-ENYL)-L-LEUCINAMIDE']",['1'],['?'],['?'],18
