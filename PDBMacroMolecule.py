@@ -130,6 +130,44 @@ def EntityDetail(data):
 			return(dict_EntityDetail)
 		
 
+def BfactorStats(data):
+	
+	for k,v in data.items():
+		try:
+			AtomRecord = v['_atom_site']
+			if isinstance(AtomRecord['id'], (str, float,int)):
+				df_BF = pd.DataFrame.from_dict([AtomRecord])
+				df_BF_TC = df_BF[['group_PDB','label_entity_id','B_iso_or_equiv','auth_comp_id','auth_asym_id','auth_atom_id']]
+				df_BF_RN = df_BF_TC.rename(columns={'label_entity_id': 'entity_id'})
+				ChainRecords = df_BF_RN['auth_asym_id'].agg(lambda x: x.unique().tolist())
+				BfactorRecord = df_BF_RN[(df_BF_RN['auth_asym_id'] == i) & (df_BF_RN['group_PDB'] == "ATOM") & (df_BF_RN['auth_atom_id'] == "CA")].reset_index()
+				EntityID = df_BF_RN[(df_BF_RN['auth_asym_id'] == i) & (df_BF_RN['group_PDB'] == "ATOM")]['entity_id'].agg(lambda x: x.unique().tolist())
+				BfactorMean = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).mean()
+				BfactorMin  = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).min()
+				BfactorMax  = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).max()
+				Bfactor = {"entity_id": EntityID[0], "chain": i, "Mean": round(BfactorMean,2), "Min": round(BfactorMin,2), "Max": round(BfactorMax,2)}
+				return([Bfactor])
+			else:
+				BF = []
+				df_BF = pd.DataFrame.from_dict(AtomRecord)
+				df_BF_TC = df_BF[['group_PDB','label_entity_id','B_iso_or_equiv','auth_comp_id','auth_asym_id','auth_atom_id']]
+				df_BF_RN = df_BF_TC.rename(columns={'label_entity_id': 'entity_id'})
+				ChainRecords = df_BF_RN['auth_asym_id'].agg(lambda x: x.unique().tolist())
+				for i in ChainRecords:
+					BfactorRecord = df_BF_RN[(df_BF_RN['auth_asym_id'] == i) & (df_BF_RN['group_PDB'] == "ATOM") & (df_BF_RN['auth_atom_id'] == "CA")].reset_index()
+					EntityID = df_BF_RN[(df_BF_RN['auth_asym_id'] == i) & (df_BF_RN['group_PDB'] == "ATOM")]['entity_id'].agg(lambda x: x.unique().tolist())
+					BfactorMean = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).mean()
+					BfactorMin  = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).min()
+					BfactorMax  = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).max()
+					Bfactor = {"entity_id": EntityID[0], "chain": i, "Mean": round(BfactorMean,2), "Min": round(BfactorMin,2), "Max": round(BfactorMax,2)}
+					BF.append(Bfactor)
+				
+				return(BF)
+		except KeyError:
+			dict_BF = [{'group_PDB': '1', 'entity_id': '1', 'B_iso_or_equiv': '0', 'auth_comp_id': 'NA', 'auth_asym_id': 'NA', 'auth_atom_id': 'NA'}]
+			return(dict_BF)
+		
+
 def MicroMoleculeRecord(D):
 	dict_group = {}
 	Chain_len  = {}
@@ -137,15 +175,17 @@ def MicroMoleculeRecord(D):
 	Ent_poly = Entitypoly(D)
 	Stru_Ref = StruRef(D)
 	Ent_Det	 = EntityDetail(D)
+	BFlist	 = BfactorStats(D)
 	df_EP	= pd.DataFrame.from_dict(Ent_poly)
 	df_OL	= pd.DataFrame.from_dict(Org_list["Oragnism"])
 	df_SR	= pd.DataFrame.from_dict(Stru_Ref)
 	df_ET	= pd.DataFrame.from_dict(Ent_Det)
+	df_BF   = pd.DataFrame.from_dict(BFlist)
 	
 	result1    = pd.merge(df_EP,df_OL , on=['entity_id'])
 	result2    = pd.merge(result1,df_SR , on=['entity_id'])
 	result3    = pd.merge(result2,df_ET , on=['entity_id'])
-	result4 = result3       #.drop_duplicates(subset = ['pdbx_gene_src_ncbi_taxonomy_id'])
+	result4    = pd.merge(result3,df_BF , on=['entity_id'])
 	result5 = result4.groupby('pdbx_strand_id').agg(lambda x: x.unique().tolist())
 	result6 = result5.reset_index()
 	
@@ -165,35 +205,11 @@ def MicroMoleculeRecord(D):
 				Chain_len["ChainLen"] = ChainList
 		except KeyError:
 			Chain_len["ChainLen"] = ["NA"]
-	
+
 	result6["ChainLength"] = pd.DataFrame.from_dict(Chain_len)
 	dict_group["MicroMolecule"] = result6.to_dict("records")
 	return(result6)
 
-
-def BfactorStats(PDBData, Chain):
-	
-	for k, v in PDBData.items():
-		try:
-			AtomRecord = v['_atom_site']
-			if isinstance(AtomRecord, (str, float,int)):
-				df_ATOM = pd.DataFrame.from_dict([AtomRecord])
-				BfactorRecord = df_ATOM[(df_ATOM['auth_asym_id'] == Chain) & (df_ATOM['group_PDB'] == "ATOM") & (df_ATOM['auth_atom_id'] == "CA")].reset_index()
-				BfactorMean = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).mean()
-				BfactorMin  = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).min()
-				BfactorMax  = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).max()
-				return(round(BfactorMean,2) ,round(BfactorMin,2) , round(BfactorMax,2))
-				
-			else:
-				df_ATOM = pd.DataFrame.from_dict(AtomRecord)
-				BfactorRecord = df_ATOM[(df_ATOM['auth_asym_id'] == Chain) & (df_ATOM['group_PDB'] == "ATOM") & (df_ATOM['auth_atom_id'] == "CA")].reset_index()
-				BfactorMean = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).mean()
-				BfactorMin = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).min()
-				BfactorMax = pd.to_numeric(BfactorRecord["B_iso_or_equiv"]).max()
-				return(round(BfactorMean,2) ,round(BfactorMin,2) , round(BfactorMax,2))
-		except KeyError:
-			df_ATOM = [{'entity_id': '1', 'pdbx_db_accession': 'NA'}]
-			return(df_ATOM)
 
 def BfactorPerChainLinePlotCif(PDBData, Chain, PDBID):
 	
@@ -235,5 +251,4 @@ if __name__ == '__main__':
 	datadict = CifFileReader().read(commandline_args['input_pdb'])
 	PDBID = list(datadict.keys())
 	BfactorPerChainLinePlotCif(datadict, commandline_args['Chain'],PDBID)
-	print(BfactorStats(PDBData=datadict, Chain=commandline_args['Chain']))
 	MicroMoleculeRecord(datadict).to_csv("MM.csv")
